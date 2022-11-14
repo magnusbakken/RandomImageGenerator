@@ -1,4 +1,6 @@
-﻿namespace RandomImageGenerator.SafeList;
+﻿using System.Collections.Generic;
+
+namespace RandomImageGenerator.SafeList;
 
 public record SafeListOptions
 {

@@ -1,4 +1,6 @@
-﻿namespace RandomImageGenerator.Corpora;
+﻿using System.Collections.Generic;
+
+namespace RandomImageGenerator.Corpora;
 
 public static class CorpusSource
 {

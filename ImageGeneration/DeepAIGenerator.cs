@@ -1,16 +1,19 @@
-﻿namespace RandomImageGenerator.ImageGeneration;
+﻿using System.Net.Http.Json;
+using Microsoft.Extensions.Options;
+
+namespace RandomImageGenerator.ImageGeneration;
 
 public class DeepAIGenerator : IImageGenerator
 {
     private const string Url = "https://api.deepai.org/api/text2img";
-    private const string ApiKey = "quickstart-QUdJIGlzIGNvbWluZy4uLi4K";
-
+    private readonly DeepAIOptions _options;
     private readonly HttpClient _httpClient;
 
-    public DeepAIGenerator(HttpClient httpClient)
+    public DeepAIGenerator(IHttpClientFactory httpClientFactory, IOptions<DeepAIOptions> options)
     {
-        _httpClient = httpClient;
-        _httpClient.DefaultRequestHeaders.Add("api-key", ApiKey);
+        _options = options.Value;
+        _httpClient = httpClientFactory.CreateClient(nameof(DeepAIGenerator));
+        _httpClient.DefaultRequestHeaders.Add("api-key", _options.ApiKey);
     }
 
     public async Task<byte[]> Generate(string sentence, CancellationToken cancellationToken)
@@ -23,7 +26,12 @@ public class DeepAIGenerator : IImageGenerator
             if (content != null)
                 return await _httpClient.GetByteArrayAsync(content.OutputUrl, cancellationToken);
         }
-        
+        else
+        {
+            var content = await response.Content.ReadAsStringAsync(cancellationToken);
+            Console.WriteLine(content);
+        }
+
         return Array.Empty<byte>();
     }
 }
