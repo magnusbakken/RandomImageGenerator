@@ -9,10 +9,6 @@ using RandomImageGenerator.TextGeneration;
 
 var host = new HostBuilder()
     .ConfigureFunctionsWorkerDefaults()
-    .ConfigureAppConfiguration(configurationBuilder =>
-    {
-        configurationBuilder.AddEnvironmentVariables();
-    })
     .ConfigureServices(services =>
     {
         services.AddLogging();
