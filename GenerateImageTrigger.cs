@@ -81,6 +81,6 @@ public class GenerateImageTrigger
 
     private static string SanitizeFilename(string filename)
     {
-        return Regex.Replace(filename, @"[^\u0020-\u007E]", string.Empty);
+        return Regex.Replace(Regex.Replace(filename, "[^\u0020-\u007E]", ""), "[\"/\\\\:]", "");
     }
 }
