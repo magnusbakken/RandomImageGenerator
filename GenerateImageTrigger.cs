@@ -1,6 +1,7 @@
 using System.Net;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
+using Microsoft.Extensions.Logging;
 using RandomImageGenerator.Generation;
 
 namespace RandomImageGenerator;
@@ -8,22 +9,35 @@ namespace RandomImageGenerator;
 public class GenerateImageTrigger
 {
     private readonly IGenerator _generator;
+    private readonly ILogger<GenerateImageTrigger> _logger;
 
-    public GenerateImageTrigger(IGenerator generator) => _generator = generator;
+    public GenerateImageTrigger(IGenerator generator, ILogger<GenerateImageTrigger> logger)
+    {
+        _generator = generator;
+        _logger = logger;
+    }
 
     [Function("GenerateImage")]
     public async Task<HttpResponseData> Run(
         [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = null)] HttpRequestData req,
         CancellationToken cancellationToken)
     {
-        var ipAddress = GetClientIpAddress(req);
-        return await _generator.Generate(ipAddress, cancellationToken) switch
+        try
         {
-            GeneratorResult.AccessDeniedResult => req.CreateResponse(HttpStatusCode.Forbidden),
-            GeneratorResult.ImageGenerationFailedResult => await WriteResponse(req.CreateResponse(HttpStatusCode.BadRequest), "Unable to generate image"),
-            GeneratorResult.SuccessResult r => await Success(req, r),
-            _ => throw new InvalidOperationException("Unknown generator result type")
-        };
+            var ipAddress = GetClientIpAddress(req);
+            return await _generator.Generate(ipAddress, cancellationToken) switch
+            {
+                GeneratorResult.AccessDeniedResult => req.CreateResponse(HttpStatusCode.Forbidden),
+                GeneratorResult.ImageGenerationFailedResult => await WriteResponse(req.CreateResponse(HttpStatusCode.BadRequest), "Unable to generate image"),
+                GeneratorResult.SuccessResult r => await Success(req, r),
+                _ => throw new InvalidOperationException("Unknown generator result type")
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "An unhandled exception occurred");
+            throw;
+        }
     }
 
     private static async Task<HttpResponseData> Success(HttpRequestData req, GeneratorResult.SuccessResult r)
