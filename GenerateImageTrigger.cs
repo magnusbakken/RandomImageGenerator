@@ -1,4 +1,5 @@
 using System.Net;
+using System.Text.RegularExpressions;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
@@ -42,7 +43,8 @@ public class GenerateImageTrigger
 
     private static async Task<HttpResponseData> Success(HttpRequestData req, GeneratorResult.SuccessResult r)
     {
-        var filename = $"{r.Sentence}.jpg";
+        var sanitizedSentence = SanitizeFilename(r.Sentence);
+        var filename = $"{(sanitizedSentence.EndsWith('.') ? sanitizedSentence : (sanitizedSentence + "."))}jpg";
         return await WriteResponse(SetHeader(req.CreateResponse(HttpStatusCode.OK), "Content-Disposition", $"attachment; filename=\"{filename}\""), r.Image);
     }
 
@@ -75,5 +77,10 @@ public class GenerateImageTrigger
             .Split(new char[] { ':' })?
             .FirstOrDefault();
         return IPAddress.TryParse(ip, out var result) ? result : null;
+    }
+
+    private static string SanitizeFilename(string filename)
+    {
+        return Regex.Replace(filename, @"[^\u0020-\u007E]", string.Empty);
     }
 }
