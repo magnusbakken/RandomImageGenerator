@@ -1,8 +1,11 @@
+using System.Collections.Specialized;
 using System.Net;
 using System.Text.RegularExpressions;
+using System.Web;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
+using RandomImageGenerator.Corpora;
 using RandomImageGenerator.Generation;
 
 namespace RandomImageGenerator;
@@ -25,8 +28,10 @@ public class GenerateImageTrigger
     {
         try
         {
+            var query = HttpUtility.ParseQueryString(req.Url.Query);
+            var corpus = GetCorpusFromQuery(query);
             var ipAddress = GetClientIpAddress(req);
-            return await _generator.Generate(ipAddress, cancellationToken) switch
+            return await _generator.Generate(corpus, ipAddress, cancellationToken) switch
             {
                 GeneratorResult.AccessDeniedResult => req.CreateResponse(HttpStatusCode.Forbidden),
                 GeneratorResult.ImageGenerationFailedResult => await WriteResponse(req.CreateResponse(HttpStatusCode.BadRequest), "Unable to generate image"),
@@ -82,5 +87,10 @@ public class GenerateImageTrigger
     private static string SanitizeFilename(string filename)
     {
         return Regex.Replace(Regex.Replace(filename, "[^\u0020-\u007E]", ""), "[\"/\\\\:]", "");
+    }
+
+    private static Corpus GetCorpusFromQuery(NameValueCollection query)
+    {
+        return Enum.TryParse<Corpus>(query.Get("corpus"), ignoreCase: true, out var corpus) ? corpus : Corpus.EngNews202010K;
     }
 }

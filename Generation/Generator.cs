@@ -27,7 +27,7 @@ public class Generator : IGenerator
         _logger = log;
     }
 
-    public async Task<GeneratorResult> Generate(IPAddress? address, CancellationToken cancellationToken)
+    public async Task<GeneratorResult> Generate(Corpus corpus, IPAddress? address, CancellationToken cancellationToken)
     {
         _logger.LogInformation("C# HTTP trigger function processed a request.");
         var ip = address?.GetAddressBytes();
@@ -37,8 +37,8 @@ public class Generator : IGenerator
             return GeneratorResult.AccessDenied;
         }
 
-        var corpus = CorpusSource.GetCorpusPath(Corpus.EngNews202010K);
-        var generator = _sentenceGeneratorFactory.CreateGenerator(corpus);
+        var corpusPath = CorpusSource.GetCorpusPath(corpus);
+        var generator = _sentenceGeneratorFactory.CreateGenerator(corpusPath);
         var sentence = generator.Generate();
 
         var image = await _imageGenerator.Generate(sentence, cancellationToken);
