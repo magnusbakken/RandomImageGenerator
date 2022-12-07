@@ -1,10 +1,10 @@
-using System.Net.Http.Headers;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using RandomImageGenerator.Generation;
 using RandomImageGenerator.ImageGeneration;
 using RandomImageGenerator.SafeList;
+using RandomImageGenerator.Storage;
 using RandomImageGenerator.TextGeneration;
 
 var host = new HostBuilder()
@@ -26,6 +26,10 @@ var host = new HostBuilder()
 
         services.AddTransient<DeepAIGenerator>();
         services.AddTransient<IGenerator, Generator>();
+
+        services.AddOptions<AzureStorageOptions>()
+            .Configure<IConfiguration>((settings, configuration) => configuration.GetSection(nameof(AzureStorageOptions)).Bind(settings));
+        services.AddTransient<IStorageHandler, AzureStorageHandler>();
     })
     .Build();
 

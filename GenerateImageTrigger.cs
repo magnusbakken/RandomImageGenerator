@@ -1,5 +1,6 @@
 using System.Collections.Specialized;
 using System.Net;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Web;
 using Microsoft.Azure.Functions.Worker;
@@ -22,7 +23,7 @@ public class GenerateImageTrigger
     }
 
     [Function("GenerateImage")]
-    public async Task<HttpResponseData> Run(
+    public async Task<HttpResponseData> GenerateImage(
         [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = null)] HttpRequestData req,
         CancellationToken cancellationToken)
     {
@@ -31,26 +32,60 @@ public class GenerateImageTrigger
             var query = HttpUtility.ParseQueryString(req.Url.Query);
             var corpus = GetCorpusFromQuery(query);
             var ipAddress = GetClientIpAddress(req);
-            return await _generator.Generate(corpus, ipAddress, cancellationToken) switch
+            return await _generator.GenerateImage(corpus, ipAddress, cancellationToken) switch
             {
-                GeneratorResult.AccessDeniedResult => req.CreateResponse(HttpStatusCode.Forbidden),
-                GeneratorResult.ImageGenerationFailedResult => await WriteResponse(req.CreateResponse(HttpStatusCode.BadRequest), "Unable to generate image"),
-                GeneratorResult.SuccessResult r => await Success(req, r),
+                ImageGenerationResult.AccessDeniedResult => req.CreateResponse(HttpStatusCode.Forbidden),
+                ImageGenerationResult.ImageGenerationFailedResult => await WriteResponse(req.CreateResponse(HttpStatusCode.BadRequest), "Unable to generate image"),
+                ImageGenerationResult.SuccessResult r => await SendImage(req, r),
                 _ => throw new InvalidOperationException("Unknown generator result type")
             };
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "An unhandled exception occurred");
+            _logger.LogError(ex, "An unhandled exception occurred in GenerateImage");
             throw;
         }
     }
 
-    private static async Task<HttpResponseData> Success(HttpRequestData req, GeneratorResult.SuccessResult r)
+    [Function("GenerateImageLink")]
+    public async Task<HttpResponseData> GenerateImageLink(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = null)] HttpRequestData req,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var query = HttpUtility.ParseQueryString(req.Url.Query);
+            var corpus = GetCorpusFromQuery(query);
+            var ipAddress = GetClientIpAddress(req);
+            return await _generator.GenerateImageLink(corpus, ipAddress, cancellationToken) switch
+            {
+                LinkGenerationResult.AccessDeniedResult => req.CreateResponse(HttpStatusCode.Forbidden),
+                LinkGenerationResult.ImageGenerationFailedResult => await WriteResponse(req.CreateResponse(HttpStatusCode.BadRequest), "Unable to generate image"),
+                LinkGenerationResult.SuccessResult r => await SendImageLink(req, r),
+                _ => throw new InvalidOperationException("Unknown generator result type")
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "An unhandled exception occurred in GenerateImageLink");
+            throw;
+        }
+    }
+
+    private static async Task<HttpResponseData> SendImage(HttpRequestData req, ImageGenerationResult.SuccessResult r)
     {
         var sanitizedSentence = SanitizeFilename(r.Sentence);
         var filename = $"{(sanitizedSentence.EndsWith('.') ? sanitizedSentence : (sanitizedSentence + "."))}jpg";
         return await WriteResponse(SetHeader(req.CreateResponse(HttpStatusCode.OK), "Content-Disposition", $"attachment; filename=\"{filename}\""), r.Image);
+    }
+
+    private async Task<HttpResponseData> SendImageLink(
+        HttpRequestData req,
+        LinkGenerationResult.SuccessResult r)
+    {
+        var response = new { r.Link, r.Sentence };
+        var json = JsonSerializer.Serialize(response);
+        return await WriteResponse(req.CreateResponse(HttpStatusCode.OK), json);
     }
 
     private static async Task<HttpResponseData> WriteResponse(HttpResponseData response, string body)

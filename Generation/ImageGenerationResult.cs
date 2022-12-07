@@ -1,6 +1,6 @@
 ﻿namespace RandomImageGenerator.Generation;
 
-public abstract record GeneratorResult
+public abstract record ImageGenerationResult
 {
     public static AccessDeniedResult AccessDenied { get; } = new();
 
@@ -8,13 +8,13 @@ public abstract record GeneratorResult
 
     public static SuccessResult Success(byte[] image, string sentence) => new(image, sentence);
 
-    private GeneratorResult() { }
+    private ImageGenerationResult() { }
 
-    public record AccessDeniedResult : GeneratorResult { }
+    public record AccessDeniedResult : ImageGenerationResult { }
 
-    public record ImageGenerationFailedResult : GeneratorResult { }
+    public record ImageGenerationFailedResult : ImageGenerationResult { }
 
-    public record SuccessResult : GeneratorResult
+    public record SuccessResult : ImageGenerationResult
     {
         public SuccessResult(byte[] image, string sentence)
         {

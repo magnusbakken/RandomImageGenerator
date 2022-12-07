@@ -5,5 +5,7 @@ namespace RandomImageGenerator.Generation;
 
 public interface IGenerator
 {
-    Task<GeneratorResult> Generate(Corpus corpus, IPAddress? address, CancellationToken cancellationToken);
+    Task<ImageGenerationResult> GenerateImage(Corpus corpus, IPAddress? address, CancellationToken cancellationToken);
+
+    Task<LinkGenerationResult> GenerateImageLink(Corpus corpus, IPAddress? address, CancellationToken cancellationToken);
 }
