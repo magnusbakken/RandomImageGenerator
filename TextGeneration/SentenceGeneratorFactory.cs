@@ -1,6 +1,5 @@
 ﻿using Markov;
 using System.Collections.Concurrent;
-using System.Text.RegularExpressions;
 
 namespace RandomImageGenerator.TextGeneration;
 
@@ -12,9 +11,7 @@ public class SentenceGeneratorFactory : ISentenceGeneratorFactory
 
     private static MarkovChain<string> CreateChain(string corpus)
     {
-        var regex = new Regex(@"^\d+\s+(.*)");
         var lines = File.ReadAllLines(corpus)
-            .SelectMany(line => regex.Match(line) is Match match && match.Success ? new[] { match.Groups[1].Value } : Enumerable.Empty<string>())
             .Select(line => line.Replace("”", "").Replace("“", ""))
             .ToArray();
 
