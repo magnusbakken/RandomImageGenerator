@@ -17,6 +17,9 @@
     <None Update="Corpora\eng_news_2020_10K\eng_news_2020_10K-sentences.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="Corpora\eng_sms_spam_collection\eng_sms_spam_collection.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Corpora\eng-uk_web-public_2018_10K\eng-uk_web-public_2018_10K-sentences.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
