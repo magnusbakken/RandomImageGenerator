@@ -8,6 +8,7 @@ public static class CorpusSource
     {
         [Corpus.EngNews202010K] = "Corpora/eng_news_2020_10K/eng_news_2020_10K-sentences.txt",
         [Corpus.EngUkWebPublic201810K] = "Corpora/eng-uk_web-public_2018_10K/eng-uk_web-public_2018_10K-sentences.txt",
+        [Corpus.EngSmsSpamCollection] = "Corpora/eng_sms_spam_collection/eng_sms_spam_collection.txt",
     };
 
     public static string GetCorpusPath(Corpus corpus) => _corpusPathMapping[corpus];
