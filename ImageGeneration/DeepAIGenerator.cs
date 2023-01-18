@@ -40,7 +40,7 @@ public class DeepAIGenerator : IImageGenerator
             _logger.LogInformation("Got unsuccessful response from DeepAI: [{0}]: {1}", response.StatusCode, content);
         }
 
-        _logger.LogInformation("Failed to generate image for sentence: {0}", sentence);
+        _logger.LogWarning("Failed to generate image for sentence: {0}", sentence);
         return Array.Empty<byte>();
     }
 }

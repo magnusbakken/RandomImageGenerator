@@ -8,6 +8,7 @@ using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
 using RandomImageGenerator.Corpora;
 using RandomImageGenerator.Generation;
+using RandomImageGenerator.ImageGeneration;
 
 namespace RandomImageGenerator;
 
@@ -30,9 +31,10 @@ public class GenerateImageTrigger
         try
         {
             var query = HttpUtility.ParseQueryString(req.Url.Query);
+            var imageGeneratorType = GetImageGeneratorTypeFromQuery(query);
             var corpus = GetCorpusFromQuery(query);
             var ipAddress = GetClientIpAddress(req);
-            return await _generator.GenerateImage(corpus, ipAddress, cancellationToken) switch
+            return await _generator.GenerateImage(imageGeneratorType, corpus, ipAddress, cancellationToken) switch
             {
                 ImageGenerationResult.AccessDeniedResult => req.CreateResponse(HttpStatusCode.Forbidden),
                 ImageGenerationResult.ImageGenerationFailedResult => await WriteResponse(req.CreateResponse(HttpStatusCode.BadRequest), "Unable to generate image"),
@@ -55,9 +57,10 @@ public class GenerateImageTrigger
         try
         {
             var query = HttpUtility.ParseQueryString(req.Url.Query);
+            var imageGeneratorType = GetImageGeneratorTypeFromQuery(query);
             var corpus = GetCorpusFromQuery(query);
             var ipAddress = GetClientIpAddress(req);
-            return await _generator.GenerateImageLink(corpus, ipAddress, cancellationToken) switch
+            return await _generator.GenerateImageLink(imageGeneratorType, corpus, ipAddress, cancellationToken) switch
             {
                 LinkGenerationResult.AccessDeniedResult => req.CreateResponse(HttpStatusCode.Forbidden),
                 LinkGenerationResult.ImageGenerationFailedResult => await WriteResponse(req.CreateResponse(HttpStatusCode.BadRequest), "Unable to generate image"),
@@ -124,8 +127,19 @@ public class GenerateImageTrigger
         return Regex.Replace(Regex.Replace(filename, "[^\u0020-\u007E]", ""), "[\"/\\\\:]", "");
     }
 
+    private static ImageGeneratorType GetImageGeneratorTypeFromQuery(NameValueCollection query)
+    {
+        return GetEnumFromQuery<ImageGeneratorType>(query, "imagegen", ImageGeneratorType.DeepAI);
+    }
+
     private static Corpus GetCorpusFromQuery(NameValueCollection query)
     {
-        return Enum.TryParse<Corpus>(query.Get("corpus"), ignoreCase: true, out var corpus) ? corpus : Corpus.EngNews202010K;
+        return GetEnumFromQuery<Corpus>(query, "corpus", Corpus.EngNews202010K);
+    }
+
+    private static T GetEnumFromQuery<T>(NameValueCollection query, string queryKey, T defaultValue)
+        where T : struct
+    {
+        return Enum.TryParse<T>(query.Get(queryKey), ignoreCase: true, out var corpus) ? corpus : defaultValue;
     }
 }
