@@ -25,7 +25,7 @@ public class GenerateImageTrigger
 
     [Function("GenerateImage")]
     public async Task<HttpResponseData> GenerateImage(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = null)] HttpRequestData req,
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = null)] HttpRequestData req,
         CancellationToken cancellationToken)
     {
         try
@@ -51,7 +51,7 @@ public class GenerateImageTrigger
 
     [Function("GenerateImageLink")]
     public async Task<HttpResponseData> GenerateImageLink(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = null)] HttpRequestData req,
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = null)] HttpRequestData req,
         CancellationToken cancellationToken)
     {
         try
