@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Logging;
 
-namespace RandomImageGenerator.ImageGeneration;
+namespace RandomImageGenerator.ImageGeneration.OpenAI;
 
 public class OpenAIDownloader
 {

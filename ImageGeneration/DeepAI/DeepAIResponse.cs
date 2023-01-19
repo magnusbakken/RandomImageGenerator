@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace RandomImageGenerator.ImageGeneration;
+namespace RandomImageGenerator.ImageGeneration.DeepAI;
 
 public record DeepAIResponse
 {

@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace RandomImageGenerator.ImageGeneration;
+namespace RandomImageGenerator.ImageGeneration.OpenAI;
 
 public record OpenAIRequest
 {

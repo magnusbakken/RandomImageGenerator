@@ -1,4 +1,4 @@
-﻿namespace RandomImageGenerator.ImageGeneration;
+﻿namespace RandomImageGenerator.ImageGeneration.DeepAI;
 
 public record DeepAIOptions
 {

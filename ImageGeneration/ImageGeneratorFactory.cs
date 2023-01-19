@@ -1,3 +1,6 @@
+using RandomImageGenerator.ImageGeneration.DeepAI;
+using RandomImageGenerator.ImageGeneration.OpenAI;
+
 namespace RandomImageGenerator.ImageGeneration;
 
 public class ImageGeneratorFactory : IImageGeneratorFactory

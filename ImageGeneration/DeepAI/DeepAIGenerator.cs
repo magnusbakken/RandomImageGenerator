@@ -2,7 +2,7 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace RandomImageGenerator.ImageGeneration;
+namespace RandomImageGenerator.ImageGeneration.DeepAI;
 
 public class DeepAIGenerator : IImageGenerator
 {

@@ -3,6 +3,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using RandomImageGenerator.Generation;
 using RandomImageGenerator.ImageGeneration;
+using RandomImageGenerator.ImageGeneration.DeepAI;
+using RandomImageGenerator.ImageGeneration.OpenAI;
 using RandomImageGenerator.SafeList;
 using RandomImageGenerator.Storage;
 using RandomImageGenerator.TextGeneration;

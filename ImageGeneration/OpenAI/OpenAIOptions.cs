@@ -1,4 +1,4 @@
-namespace RandomImageGenerator.ImageGeneration;
+namespace RandomImageGenerator.ImageGeneration.OpenAI;
 
 public record OpenAIOptions
 {

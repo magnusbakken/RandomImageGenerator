@@ -2,7 +2,7 @@ using System.Net.Http.Json;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace RandomImageGenerator.ImageGeneration;
+namespace RandomImageGenerator.ImageGeneration.OpenAI;
 
 public class OpenAIGenerator : IImageGenerator
 {
