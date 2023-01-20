@@ -6,9 +6,9 @@ namespace RandomImageGenerator.ImageGeneration;
 public class ImageGeneratorFactory : IImageGeneratorFactory
 {
     private readonly DeepAIGenerator _deepAIGenerator;
-    private readonly OpenAIGenerator _openAIGenerator;
+    private readonly OpenAIImageGenerator _openAIGenerator;
 
-    public ImageGeneratorFactory(DeepAIGenerator deepAIGenerator, OpenAIGenerator openAIGenerator)
+    public ImageGeneratorFactory(DeepAIGenerator deepAIGenerator, OpenAIImageGenerator openAIGenerator)
     {
         _deepAIGenerator = deepAIGenerator;
         _openAIGenerator = openAIGenerator;

@@ -39,6 +39,7 @@ public class GenerateImageTrigger
             return await _generator.GenerateImage(textGeneratorType, imageGeneratorType, corpus, ipAddress, cancellationToken) switch
             {
                 ImageGenerationResult.AccessDeniedResult => req.CreateResponse(HttpStatusCode.Forbidden),
+                ImageGenerationResult.SentenceGenerationFailedResult => await WriteResponse(req.CreateResponse(HttpStatusCode.BadRequest), "Unable to generate prompt for image"),
                 ImageGenerationResult.ImageGenerationFailedResult => await WriteResponse(req.CreateResponse(HttpStatusCode.BadRequest), "Unable to generate image"),
                 ImageGenerationResult.SuccessResult r => await SendImage(req, r),
                 _ => throw new InvalidOperationException("Unknown generator result type")
@@ -66,6 +67,7 @@ public class GenerateImageTrigger
             return await _generator.GenerateImageLink(textGeneratorType, imageGeneratorType, corpus, ipAddress, cancellationToken) switch
             {
                 LinkGenerationResult.AccessDeniedResult => req.CreateResponse(HttpStatusCode.Forbidden),
+                LinkGenerationResult.SentenceGenerationFailedResult => await WriteResponse(req.CreateResponse(HttpStatusCode.BadRequest), "Unable to generate prompt for image"),
                 LinkGenerationResult.ImageGenerationFailedResult => await WriteResponse(req.CreateResponse(HttpStatusCode.BadRequest), "Unable to generate image"),
                 LinkGenerationResult.SuccessResult r => await SendImageLink(req, r),
                 _ => throw new InvalidOperationException("Unknown generator result type")

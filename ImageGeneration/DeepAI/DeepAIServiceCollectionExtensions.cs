@@ -5,7 +5,7 @@ namespace RandomImageGenerator.ImageGeneration.DeepAI;
 
 public static class DeepAIServiceCollectionExtensions
 {
-    public static IServiceCollection AddDeepAI(this IServiceCollection services)
+    public static IServiceCollection AddDeepAIImageGenerator(this IServiceCollection services)
     {
         services.AddHttpClient(nameof(DeepAIGenerator));
 

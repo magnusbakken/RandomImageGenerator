@@ -4,6 +4,8 @@ public abstract record ImageGenerationResult
 {
     public static AccessDeniedResult AccessDenied { get; } = new();
 
+    public static SentenceGenerationFailedResult SentenceGenerationFailed { get; } = new();
+
     public static ImageGenerationFailedResult ImageGenerationFailed { get; } = new();
 
     public static SuccessResult Success(byte[] image, string sentence) => new(image, sentence);
@@ -11,6 +13,8 @@ public abstract record ImageGenerationResult
     private ImageGenerationResult() { }
 
     public record AccessDeniedResult : ImageGenerationResult { }
+
+    public record SentenceGenerationFailedResult : ImageGenerationResult { }
 
     public record ImageGenerationFailedResult : ImageGenerationResult { }
 

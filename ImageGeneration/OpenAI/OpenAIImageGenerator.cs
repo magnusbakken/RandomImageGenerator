@@ -1,25 +1,27 @@
 using System.Net.Http.Json;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using RandomImageGenerator.Shared.OpenAI;
 
 namespace RandomImageGenerator.ImageGeneration.OpenAI;
 
-public class OpenAIGenerator : IImageGenerator
+public class OpenAIImageGenerator : IImageGenerator
 {
-    private const string Url = "https://api.openai.com/v1/images/generations";
+    private const string Url = OpenAIConstants.BaseUrl + "/v1/images/generations";
+    
     private readonly OpenAIOptions _options;
     private readonly HttpClient _httpClient;
-    private readonly OpenAIDownloader _downloader;
-    private readonly ILogger<OpenAIGenerator> _logger;
+    private readonly OpenAIImageDownloader _downloader;
+    private readonly ILogger<OpenAIImageGenerator> _logger;
 
-    public OpenAIGenerator(
+    public OpenAIImageGenerator(
         IHttpClientFactory httpClientFactory,
         IOptions<OpenAIOptions> options,
-        OpenAIDownloader downloader,
-        ILogger<OpenAIGenerator> log)
+        OpenAIImageDownloader downloader,
+        ILogger<OpenAIImageGenerator> log)
     {
         _options = options.Value;
-        _httpClient = httpClientFactory.CreateClient(nameof(OpenAIGenerator));
+        _httpClient = httpClientFactory.CreateClient(nameof(OpenAIImageGenerator));
         _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_options.ApiKey}");
         _downloader = downloader;
         _logger = log;
@@ -28,17 +30,17 @@ public class OpenAIGenerator : IImageGenerator
     public async Task<byte[]> Generate(string sentence, CancellationToken cancellationToken)
     {
         _logger.LogInformation("Generating image for sentence: {0}", sentence);
-        var jsonContent = JsonContent.Create(new OpenAIRequest()
+        var jsonContent = JsonContent.Create(new OpenAIImageRequest()
         {
             Prompt = sentence,
-            User = "RandomImageGenerator Azure Functions",
+            User = OpenAIConstants.OpenAIUser,
         });
 
         var response = await _httpClient.PostAsync(Url, jsonContent, cancellationToken);
         if (response.IsSuccessStatusCode)
         {
             _logger.LogInformation("Successfully generated image for sentence: {0}", sentence);
-            var content = await response.Content.ReadFromJsonAsync<OpenAIResponse>(cancellationToken: cancellationToken);
+            var content = await response.Content.ReadFromJsonAsync<OpenAIImageResponse>(cancellationToken: cancellationToken);
             var url = content?.Data?[0]?.Url;
             if (url == null)
                 _logger.LogWarning("Unable to extract URL from response {0}", content);

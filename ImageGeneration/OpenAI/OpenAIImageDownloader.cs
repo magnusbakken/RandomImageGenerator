@@ -2,14 +2,14 @@ using Microsoft.Extensions.Logging;
 
 namespace RandomImageGenerator.ImageGeneration.OpenAI;
 
-public class OpenAIDownloader
+public class OpenAIImageDownloader
 {
     private readonly HttpClient _httpClient;
-    private readonly ILogger<OpenAIDownloader> _logger;
+    private readonly ILogger<OpenAIImageDownloader> _logger;
 
-    public OpenAIDownloader(IHttpClientFactory httpClientFactory, ILogger<OpenAIDownloader> log)
+    public OpenAIImageDownloader(IHttpClientFactory httpClientFactory, ILogger<OpenAIImageDownloader> log)
     {
-        _httpClient = httpClientFactory.CreateClient(nameof(OpenAIDownloader));
+        _httpClient = httpClientFactory.CreateClient(nameof(OpenAIImageDownloader));
         _logger = log;
     }
 

@@ -2,7 +2,7 @@ using System.Text.Json.Serialization;
 
 namespace RandomImageGenerator.ImageGeneration.OpenAI;
 
-public record OpenAIRequest
+public record OpenAIImageRequest
 {
     [JsonPropertyName("prompt")]
     public string Prompt { get; init; } = "";

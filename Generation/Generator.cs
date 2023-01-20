@@ -45,7 +45,10 @@ public class Generator : IGenerator
             return ImageGenerationResult.AccessDenied;
         }
 
-        var sentence = GenerateSentence(textGeneratorType, corpus);
+        var sentence = await GenerateSentence(textGeneratorType, corpus, cancellationToken);
+        if (sentence == null)
+            return ImageGenerationResult.SentenceGenerationFailed;
+
         var imageGenerator = _imageGeneratorFactory.Create(imageGeneratorType);
         var image = await imageGenerator.Generate(sentence, cancellationToken);
         if (image.Length == 0)
@@ -68,7 +71,10 @@ public class Generator : IGenerator
             return LinkGenerationResult.AccessDenied;
         }
 
-        var sentence = GenerateSentence(textGeneratorType, corpus);
+        var sentence = await GenerateSentence(textGeneratorType, corpus, cancellationToken);
+        if (sentence == null)
+            return LinkGenerationResult.SentenceGenerationFailed;
+
         var imageGenerator = _imageGeneratorFactory.Create(imageGeneratorType);
         var image = await imageGenerator.Generate(sentence, cancellationToken);
         if (image.Length == 0)
@@ -84,11 +90,11 @@ public class Generator : IGenerator
         return ip == null || _safeAddresses.Any(safe => safe.SequenceEqual(ip));
     }
 
-    private string GenerateSentence(TextGeneratorType textGeneratorType, Corpus corpus)
+    private async Task<string?> GenerateSentence(TextGeneratorType textGeneratorType, Corpus corpus, CancellationToken cancellationToken)
     {
         var corpusPath = CorpusSource.GetCorpusPath(corpus);
         var options = new SentenceGeneratorOptions() { MarkovCorpusPath = corpusPath };
         var generator = _sentenceGeneratorFactory.CreateGenerator(textGeneratorType, options);
-        return generator.Generate();
+        return await generator.Generate(cancellationToken);
     }
 }

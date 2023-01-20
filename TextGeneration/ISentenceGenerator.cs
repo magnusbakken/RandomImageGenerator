@@ -2,5 +2,5 @@
 
 public interface ISentenceGenerator
 {
-    string Generate();
+    Task<string?> Generate(CancellationToken cancellationToken);
 }

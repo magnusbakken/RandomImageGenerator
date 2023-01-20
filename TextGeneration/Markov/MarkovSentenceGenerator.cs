@@ -8,7 +8,7 @@ public class MarkovSentenceGenerator : ISentenceGenerator
 
     public MarkovSentenceGenerator(string corpusPath) => _chain = CreateChain(corpusPath);
 
-    public string Generate() => string.Join(" ", _chain.Chain());
+    public Task<string?> Generate(CancellationToken cancellationToken) => Task.FromResult<string?>(string.Join(" ", _chain.Chain()));
 
     private static MarkovChain<string> CreateChain(string corpus)
     {

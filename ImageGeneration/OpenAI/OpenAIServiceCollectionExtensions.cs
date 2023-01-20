@@ -1,22 +1,17 @@
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace RandomImageGenerator.ImageGeneration.OpenAI;
 
 public static class OpenAIServiceCollectionExtensions
 {
-    public static IServiceCollection AddOpenAI(this IServiceCollection services)
+    public static IServiceCollection AddOpenAIImageGenerator(this IServiceCollection services)
     {
-        services.AddHttpClient(nameof(OpenAIGenerator));
-        services.AddHttpClient(nameof(OpenAIDownloader));
-        
-        services.AddOptions<OpenAIOptions>()
-            .Configure<IConfiguration>((settings, configuration) => configuration.GetSection(nameof(OpenAIOptions)).Bind(settings));
+        services.AddHttpClient(nameof(OpenAIImageGenerator));
+        services.AddHttpClient(nameof(OpenAIImageDownloader));
 
-        services.AddTransient<OpenAIGenerator>();
-        services.AddTransient<OpenAIDownloader>();
-        
+        services.AddTransient<OpenAIImageGenerator>();
+        services.AddTransient<OpenAIImageDownloader>();
+
         return services;
     }
 }

@@ -3,6 +3,7 @@ using Microsoft.Extensions.Hosting;
 using RandomImageGenerator.Generation;
 using RandomImageGenerator.ImageGeneration;
 using RandomImageGenerator.SafeList;
+using RandomImageGenerator.Shared;
 using RandomImageGenerator.Storage;
 using RandomImageGenerator.TextGeneration;
 
@@ -14,6 +15,7 @@ var host = new HostBuilder()
         services.AddHttpClient();
         services.AddOptions();
 
+        services.AddShared();
         services.AddGeneration();
         services.AddSafeList();
         services.AddImageGeneration();

@@ -4,6 +4,8 @@ public abstract record LinkGenerationResult
 {
     public static AccessDeniedResult AccessDenied { get; } = new();
 
+    public static SentenceGenerationFailedResult SentenceGenerationFailed { get; } = new();
+
     public static ImageGenerationFailedResult ImageGenerationFailed { get; } = new();
 
     public static SuccessResult Success(string link, string sentence) => new(link, sentence);
@@ -11,6 +13,8 @@ public abstract record LinkGenerationResult
     private LinkGenerationResult() { }
 
     public record AccessDeniedResult : LinkGenerationResult { }
+
+    public record SentenceGenerationFailedResult : LinkGenerationResult { }
 
     public record ImageGenerationFailedResult : LinkGenerationResult { }
 
