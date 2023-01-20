@@ -1,24 +1,23 @@
-﻿using Markov;
+﻿using RandomImageGenerator.TextGeneration.Markov;
 using System.Collections.Concurrent;
 
 namespace RandomImageGenerator.TextGeneration;
 
 public class SentenceGeneratorFactory : ISentenceGeneratorFactory
 {
-    private readonly ConcurrentDictionary<string, ISentenceGenerator> _mapping = new();
+    private readonly ConcurrentDictionary<string, MarkovSentenceGenerator> _corpusMarkovMapping = new();
 
-    public ISentenceGenerator CreateGenerator(string corpus) => _mapping.GetOrAdd(corpus, corpus => new SentenceGenerator(CreateChain(corpus)));
-
-    private static MarkovChain<string> CreateChain(string corpus)
+    public ISentenceGenerator CreateGenerator(TextGeneratorType textGeneratorType, SentenceGeneratorOptions options)
     {
-        var lines = File.ReadAllLines(corpus)
-            .Select(line => line.Replace("”", "").Replace("“", ""))
-            .ToArray();
+        return textGeneratorType switch
+        {
+            TextGeneratorType.Markov => CreateMarkovGenerator(options),
+            _ => throw new ArgumentException($"Unknown text generator type: {textGeneratorType}", nameof(textGeneratorType)),
+        };
+    }
 
-        var chain = new MarkovChain<string>(1);
-        foreach (var line in lines)
-            chain.Add(line.Split(' '));
-
-        return chain;
+    private MarkovSentenceGenerator CreateMarkovGenerator(SentenceGeneratorOptions options)
+    {
+        return _corpusMarkovMapping.GetOrAdd(options.MarkovCorpusPath, corpusPath => new MarkovSentenceGenerator(corpusPath));
     }
 }

@@ -32,6 +32,7 @@ public class Generator : IGenerator
     }
 
     public async Task<ImageGenerationResult> GenerateImage(
+        TextGeneratorType textGeneratorType,
         ImageGeneratorType imageGeneratorType,
         Corpus corpus,
         IPAddress? address,
@@ -44,7 +45,7 @@ public class Generator : IGenerator
             return ImageGenerationResult.AccessDenied;
         }
 
-        var sentence = GenerateSentence(corpus);
+        var sentence = GenerateSentence(textGeneratorType, corpus);
         var imageGenerator = _imageGeneratorFactory.Create(imageGeneratorType);
         var image = await imageGenerator.Generate(sentence, cancellationToken);
         if (image.Length == 0)
@@ -54,6 +55,7 @@ public class Generator : IGenerator
     }
 
     public async Task<LinkGenerationResult> GenerateImageLink(
+        TextGeneratorType textGeneratorType,
         ImageGeneratorType imageGeneratorType,
         Corpus corpus,
         IPAddress? address,
@@ -66,7 +68,7 @@ public class Generator : IGenerator
             return LinkGenerationResult.AccessDenied;
         }
 
-        var sentence = GenerateSentence(corpus);
+        var sentence = GenerateSentence(textGeneratorType, corpus);
         var imageGenerator = _imageGeneratorFactory.Create(imageGeneratorType);
         var image = await imageGenerator.Generate(sentence, cancellationToken);
         if (image.Length == 0)
@@ -82,10 +84,11 @@ public class Generator : IGenerator
         return ip == null || _safeAddresses.Any(safe => safe.SequenceEqual(ip));
     }
 
-    private string GenerateSentence(Corpus corpus)
+    private string GenerateSentence(TextGeneratorType textGeneratorType, Corpus corpus)
     {
         var corpusPath = CorpusSource.GetCorpusPath(corpus);
-        var generator = _sentenceGeneratorFactory.CreateGenerator(corpusPath);
+        var options = new SentenceGeneratorOptions() { MarkovCorpusPath = corpusPath };
+        var generator = _sentenceGeneratorFactory.CreateGenerator(textGeneratorType, options);
         return generator.Generate();
     }
 }

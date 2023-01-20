@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using RandomImageGenerator.Corpora;
 using RandomImageGenerator.Generation;
 using RandomImageGenerator.ImageGeneration;
+using RandomImageGenerator.TextGeneration;
 
 namespace RandomImageGenerator;
 
@@ -31,10 +32,11 @@ public class GenerateImageTrigger
         try
         {
             var query = HttpUtility.ParseQueryString(req.Url.Query);
+            var textGeneratorType = GetTextGeneratorTypeFromQuery(query);
             var imageGeneratorType = GetImageGeneratorTypeFromQuery(query);
             var corpus = GetCorpusFromQuery(query);
             var ipAddress = GetClientIpAddress(req);
-            return await _generator.GenerateImage(imageGeneratorType, corpus, ipAddress, cancellationToken) switch
+            return await _generator.GenerateImage(textGeneratorType, imageGeneratorType, corpus, ipAddress, cancellationToken) switch
             {
                 ImageGenerationResult.AccessDeniedResult => req.CreateResponse(HttpStatusCode.Forbidden),
                 ImageGenerationResult.ImageGenerationFailedResult => await WriteResponse(req.CreateResponse(HttpStatusCode.BadRequest), "Unable to generate image"),
@@ -57,10 +59,11 @@ public class GenerateImageTrigger
         try
         {
             var query = HttpUtility.ParseQueryString(req.Url.Query);
+            var textGeneratorType = GetTextGeneratorTypeFromQuery(query);
             var imageGeneratorType = GetImageGeneratorTypeFromQuery(query);
             var corpus = GetCorpusFromQuery(query);
             var ipAddress = GetClientIpAddress(req);
-            return await _generator.GenerateImageLink(imageGeneratorType, corpus, ipAddress, cancellationToken) switch
+            return await _generator.GenerateImageLink(textGeneratorType, imageGeneratorType, corpus, ipAddress, cancellationToken) switch
             {
                 LinkGenerationResult.AccessDeniedResult => req.CreateResponse(HttpStatusCode.Forbidden),
                 LinkGenerationResult.ImageGenerationFailedResult => await WriteResponse(req.CreateResponse(HttpStatusCode.BadRequest), "Unable to generate image"),
@@ -125,6 +128,11 @@ public class GenerateImageTrigger
     private static string SanitizeFilename(string filename)
     {
         return Regex.Replace(Regex.Replace(filename, "[^\u0020-\u007E]", ""), "[\"/\\\\:]", "");
+    }
+
+    private static TextGeneratorType GetTextGeneratorTypeFromQuery(NameValueCollection query)
+    {
+        return GetEnumFromQuery<TextGeneratorType>(query, "textgen", TextGeneratorType.Markov);
     }
 
     private static ImageGeneratorType GetImageGeneratorTypeFromQuery(NameValueCollection query)

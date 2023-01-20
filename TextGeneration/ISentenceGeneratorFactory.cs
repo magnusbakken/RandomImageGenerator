@@ -2,5 +2,5 @@
 
 public interface ISentenceGeneratorFactory
 {
-    ISentenceGenerator CreateGenerator(string corpus);
+    ISentenceGenerator CreateGenerator(TextGeneratorType textGeneratorType, SentenceGeneratorOptions options);
 }
