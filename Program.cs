@@ -1,8 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using RandomImageGenerator.Generation;
-using RandomImageGenerator.Generation.ImageGeneration;
-using RandomImageGenerator.Generation.TextGeneration;
 using RandomImageGenerator.SafeList;
 using RandomImageGenerator.Shared;
 using RandomImageGenerator.Storage;

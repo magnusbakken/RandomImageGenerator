@@ -1,20 +1,22 @@
-using System.Collections.Specialized;
 using System.Net;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
-using System.Web;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
-using RandomImageGenerator.Corpora;
 using RandomImageGenerator.Generation;
-using RandomImageGenerator.Generation.ImageGeneration;
-using RandomImageGenerator.Generation.TextGeneration;
+using RandomImageGenerator.Models;
 
 namespace RandomImageGenerator;
 
 public class GenerateImageTrigger
 {
+    private static readonly JsonSerializerOptions SerializerOptions = new JsonSerializerOptions()
+    {
+        Converters = { new JsonStringEnumConverter() }
+    };
+
     private readonly IGenerator _generator;
     private readonly ILogger<GenerateImageTrigger> _logger;
 
@@ -31,16 +33,16 @@ public class GenerateImageTrigger
     {
         try
         {
-            var query = HttpUtility.ParseQueryString(req.Url.Query);
-            var textGeneratorType = GetTextGeneratorTypeFromQuery(query);
-            var imageGeneratorType = GetImageGeneratorTypeFromQuery(query);
-            var corpus = GetCorpusFromQuery(query);
+            var input = await DeserializeGenerateImageRequest(req, cancellationToken);
+            if (input == null)
+                return await BadRequest(req, "Invalid JSON input");
+
             var ipAddress = GetClientIpAddress(req);
-            return await _generator.GenerateImage(textGeneratorType, imageGeneratorType, corpus, ipAddress, cancellationToken) switch
+            return await _generator.GenerateImage(input.TextGenerator, input.ImageGenerator, input.Corpus, ipAddress, cancellationToken) switch
             {
                 ImageGenerationResult.AccessDeniedResult => req.CreateResponse(HttpStatusCode.Forbidden),
-                ImageGenerationResult.SentenceGenerationFailedResult => await WriteResponse(req.CreateResponse(HttpStatusCode.BadRequest), "Unable to generate prompt for image"),
-                ImageGenerationResult.ImageGenerationFailedResult => await WriteResponse(req.CreateResponse(HttpStatusCode.BadRequest), "Unable to generate image"),
+                ImageGenerationResult.SentenceGenerationFailedResult => await BadRequest(req, "Unable to generate prompt for image"),
+                ImageGenerationResult.ImageGenerationFailedResult => await BadRequest(req, "Unable to generate image"),
                 ImageGenerationResult.SuccessResult r => await SendImage(req, r),
                 _ => throw new InvalidOperationException("Unknown generator result type")
             };
@@ -59,16 +61,16 @@ public class GenerateImageTrigger
     {
         try
         {
-            var query = HttpUtility.ParseQueryString(req.Url.Query);
-            var textGeneratorType = GetTextGeneratorTypeFromQuery(query);
-            var imageGeneratorType = GetImageGeneratorTypeFromQuery(query);
-            var corpus = GetCorpusFromQuery(query);
+            var input = await DeserializeGenerateImageRequest(req, cancellationToken);
+            if (input == null)
+                return await BadRequest(req, "Invalid JSON input");
+
             var ipAddress = GetClientIpAddress(req);
-            return await _generator.GenerateImageLink(textGeneratorType, imageGeneratorType, corpus, ipAddress, cancellationToken) switch
+            return await _generator.GenerateImageLink(input.TextGenerator, input.ImageGenerator, input.Corpus, ipAddress, cancellationToken) switch
             {
                 LinkGenerationResult.AccessDeniedResult => req.CreateResponse(HttpStatusCode.Forbidden),
-                LinkGenerationResult.SentenceGenerationFailedResult => await WriteResponse(req.CreateResponse(HttpStatusCode.BadRequest), "Unable to generate prompt for image"),
-                LinkGenerationResult.ImageGenerationFailedResult => await WriteResponse(req.CreateResponse(HttpStatusCode.BadRequest), "Unable to generate image"),
+                LinkGenerationResult.SentenceGenerationFailedResult => await BadRequest(req, "Unable to generate prompt for image"),
+                LinkGenerationResult.ImageGenerationFailedResult => await BadRequest(req, "Unable to generate image"),
                 LinkGenerationResult.SuccessResult r => await SendImageLink(req, r),
                 _ => throw new InvalidOperationException("Unknown generator result type")
             };
@@ -80,6 +82,16 @@ public class GenerateImageTrigger
         }
     }
 
+    private static async Task<GenerateImageRequest?> DeserializeGenerateImageRequest(HttpRequestData req, CancellationToken cancellationToken)
+    {
+        return await JsonSerializer.DeserializeAsync<GenerateImageRequest>(req.Body, SerializerOptions, cancellationToken);
+    }
+
+    private static async Task<HttpResponseData> BadRequest(HttpRequestData req, string text)
+    {
+        return await WriteResponse(req.CreateResponse(HttpStatusCode.BadRequest), text);
+    }
+
     private static async Task<HttpResponseData> SendImage(HttpRequestData req, ImageGenerationResult.SuccessResult r)
     {
         var sanitizedSentence = SanitizeFilename(r.Sentence);
@@ -87,12 +99,12 @@ public class GenerateImageTrigger
         return await WriteResponse(SetHeader(req.CreateResponse(HttpStatusCode.OK), "Content-Disposition", $"attachment; filename=\"{filename}\""), r.Image);
     }
 
-    private async Task<HttpResponseData> SendImageLink(
+    private static async Task<HttpResponseData> SendImageLink(
         HttpRequestData req,
         LinkGenerationResult.SuccessResult r)
     {
-        var response = new { r.Link, r.Sentence };
-        var json = JsonSerializer.Serialize(response);
+        var response = new GenerateImageLinkResponse { Link = r.Link, Sentence = r.Sentence };
+        var json = JsonSerializer.Serialize(response, options: SerializerOptions);
         return await WriteResponse(req.CreateResponse(HttpStatusCode.OK), json);
     }
 
@@ -130,26 +142,5 @@ public class GenerateImageTrigger
     private static string SanitizeFilename(string filename)
     {
         return Regex.Replace(Regex.Replace(filename, "[^\u0020-\u007E]", ""), "[\"/\\\\:]", "");
-    }
-
-    private static TextGeneratorType GetTextGeneratorTypeFromQuery(NameValueCollection query)
-    {
-        return GetEnumFromQuery<TextGeneratorType>(query, "textgen", TextGeneratorType.Markov);
-    }
-
-    private static ImageGeneratorType GetImageGeneratorTypeFromQuery(NameValueCollection query)
-    {
-        return GetEnumFromQuery<ImageGeneratorType>(query, "imagegen", ImageGeneratorType.DeepAI);
-    }
-
-    private static Corpus GetCorpusFromQuery(NameValueCollection query)
-    {
-        return GetEnumFromQuery<Corpus>(query, "corpus", Corpus.EngNews202010K);
-    }
-
-    private static T GetEnumFromQuery<T>(NameValueCollection query, string queryKey, T defaultValue)
-        where T : struct
-    {
-        return Enum.TryParse<T>(query.Get(queryKey), ignoreCase: true, out var corpus) ? corpus : defaultValue;
     }
 }
