@@ -8,8 +8,8 @@ using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
 using RandomImageGenerator.Corpora;
 using RandomImageGenerator.Generation;
-using RandomImageGenerator.ImageGeneration;
-using RandomImageGenerator.TextGeneration;
+using RandomImageGenerator.Generation.ImageGeneration;
+using RandomImageGenerator.Generation.TextGeneration;
 
 namespace RandomImageGenerator;
 

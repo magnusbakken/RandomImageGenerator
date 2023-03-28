@@ -2,10 +2,10 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using RandomImageGenerator.Corpora;
-using RandomImageGenerator.ImageGeneration;
+using RandomImageGenerator.Generation.ImageGeneration;
+using RandomImageGenerator.Generation.TextGeneration;
 using RandomImageGenerator.SafeList;
 using RandomImageGenerator.Storage;
-using RandomImageGenerator.TextGeneration;
 
 namespace RandomImageGenerator.Generation;
 

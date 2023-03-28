@@ -1,7 +1,7 @@
 ﻿using System.Net;
 using RandomImageGenerator.Corpora;
-using RandomImageGenerator.ImageGeneration;
-using RandomImageGenerator.TextGeneration;
+using RandomImageGenerator.Generation.ImageGeneration;
+using RandomImageGenerator.Generation.TextGeneration;
 
 namespace RandomImageGenerator.Generation;
 
