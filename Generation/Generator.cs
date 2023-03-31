@@ -31,57 +31,47 @@ public class Generator : IGenerator
         _logger = log;
     }
 
-    public async Task<ImageGenerationResult> GenerateImage(
-        TextGeneratorType textGeneratorType,
-        ImageGeneratorType imageGeneratorType,
-        Corpus corpus,
-        IPAddress? address,
-        CancellationToken cancellationToken)
+    public async Task<GenerationResult<ImageGenerationData>> GenerateImage(GeneratorOptions options, IPAddress? address, CancellationToken cancellationToken)
     {
         _logger.LogInformation("C# HTTP GenerateImage trigger function processed a request.");
         if (!IsValidIp(address))
         {
             _logger.LogInformation("GenerateImage blocked due to untrusted IP");
-            return ImageGenerationResult.AccessDenied;
+            return GenerationResult<ImageGenerationData>.AccessDenied;
         }
 
-        var sentence = await GenerateSentence(textGeneratorType, corpus, cancellationToken);
+        var sentence = await GenerateSentence(options.TextGeneratorType, options.Corpus, cancellationToken);
         if (sentence == null)
-            return ImageGenerationResult.SentenceGenerationFailed;
+            return GenerationResult<ImageGenerationData>.SentenceGenerationFailed;
 
-        var imageGenerator = _imageGeneratorFactory.Create(imageGeneratorType);
+        var imageGenerator = _imageGeneratorFactory.Create(options.ImageGeneratorType);
         var image = await imageGenerator.Generate(sentence, cancellationToken);
         if (image.Length == 0)
-            return ImageGenerationResult.ImageGenerationFailed;
+            return GenerationResult<ImageGenerationData>.ImageGenerationFailed;
         else
-            return ImageGenerationResult.Success(image, sentence);
+            return GenerationResult<ImageGenerationData>.Success(new(image, sentence));
     }
 
-    public async Task<LinkGenerationResult> GenerateImageLink(
-        TextGeneratorType textGeneratorType,
-        ImageGeneratorType imageGeneratorType,
-        Corpus corpus,
-        IPAddress? address,
-        CancellationToken cancellationToken)
+    public async Task<GenerationResult<LinkGenerationData>> GenerateImageLink(GeneratorOptions options, IPAddress? address, CancellationToken cancellationToken)
     {
         _logger.LogInformation("C# HTTP GenerateImageLink trigger function processed a request.");
         if (!IsValidIp(address))
         {
             _logger.LogInformation("GenerateImageLink blocked due to untrusted IP: {0}", address);
-            return LinkGenerationResult.AccessDenied;
+            return GenerationResult<LinkGenerationData>.AccessDenied;
         }
 
-        var sentence = await GenerateSentence(textGeneratorType, corpus, cancellationToken);
+        var sentence = await GenerateSentence(options.TextGeneratorType, options.Corpus, cancellationToken);
         if (sentence == null)
-            return LinkGenerationResult.SentenceGenerationFailed;
+            return GenerationResult<LinkGenerationData>.SentenceGenerationFailed;
 
-        var imageGenerator = _imageGeneratorFactory.Create(imageGeneratorType);
+        var imageGenerator = _imageGeneratorFactory.Create(options.ImageGeneratorType);
         var image = await imageGenerator.Generate(sentence, cancellationToken);
         if (image.Length == 0)
-            return LinkGenerationResult.ImageGenerationFailed;
+            return GenerationResult<LinkGenerationData>.ImageGenerationFailed;
 
         var link = await _storageHandler.StoreImage(image, cancellationToken);
-        return LinkGenerationResult.Success(link, sentence);
+        return GenerationResult<LinkGenerationData>.Success(new(link, sentence));
     }
 
     private bool IsValidIp(IPAddress? address)

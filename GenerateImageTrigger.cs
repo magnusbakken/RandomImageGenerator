@@ -31,33 +31,33 @@ public class GenerateImageTrigger
         [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = null)] HttpRequestData req,
         CancellationToken cancellationToken)
     {
-        try
-        {
-            var input = await DeserializeGenerateImageRequest(req, cancellationToken);
-            if (input == null)
-                return await BadRequest(req, "Invalid JSON input");
-
-            var ipAddress = GetClientIpAddress(req);
-            return await _generator.GenerateImage(input.TextGenerator, input.ImageGenerator, input.Corpus, ipAddress, cancellationToken) switch
-            {
-                ImageGenerationResult.AccessDeniedResult => req.CreateResponse(HttpStatusCode.Forbidden),
-                ImageGenerationResult.SentenceGenerationFailedResult => await BadRequest(req, "Unable to generate prompt for image"),
-                ImageGenerationResult.ImageGenerationFailedResult => await BadRequest(req, "Unable to generate image"),
-                ImageGenerationResult.SuccessResult r => await SendImage(req, r),
-                _ => throw new InvalidOperationException("Unknown generator result type")
-            };
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "An unhandled exception occurred in GenerateImage");
-            throw;
-        }
+        return await Generate<ImageGenerationData>(
+            req,
+            cancellationToken,
+            nameof(GenerateImage),
+            async (input, ipAddress) => await _generator.GenerateImage(input, ipAddress, cancellationToken),
+            async data => await SendImage(req, data));
     }
 
     [Function("GenerateImageLink")]
     public async Task<HttpResponseData> GenerateImageLink(
         [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = null)] HttpRequestData req,
         CancellationToken cancellationToken)
+    {
+        return await Generate<LinkGenerationData>(
+            req,
+            cancellationToken,
+            nameof(GenerateImageLink),
+            async (input, ipAddress) => await _generator.GenerateImageLink(input, ipAddress, cancellationToken),
+            async data => await SendImageLink(req, data));
+    }
+
+    private async Task<HttpResponseData> Generate<T>(
+        HttpRequestData req,
+        CancellationToken cancellationToken,
+        string operation,
+        Func<GeneratorOptions, IPAddress?, Task<GenerationResult<T>>> action,
+        Func<T, Task<HttpResponseData>> processor)
     {
         try
         {
@@ -66,18 +66,19 @@ public class GenerateImageTrigger
                 return await BadRequest(req, "Invalid JSON input");
 
             var ipAddress = GetClientIpAddress(req);
-            return await _generator.GenerateImageLink(input.TextGenerator, input.ImageGenerator, input.Corpus, ipAddress, cancellationToken) switch
+            var result = await action(CreateGeneratorOptions(input), ipAddress);
+            return result switch
             {
-                LinkGenerationResult.AccessDeniedResult => req.CreateResponse(HttpStatusCode.Forbidden),
-                LinkGenerationResult.SentenceGenerationFailedResult => await BadRequest(req, "Unable to generate prompt for image"),
-                LinkGenerationResult.ImageGenerationFailedResult => await BadRequest(req, "Unable to generate image"),
-                LinkGenerationResult.SuccessResult r => await SendImageLink(req, r),
-                _ => throw new InvalidOperationException("Unknown generator result type")
+                GenerationResult<T>.AccessDeniedResult => req.CreateResponse(HttpStatusCode.Forbidden),
+                GenerationResult<T>.SentenceGenerationFailedResult => await BadRequest(req, "Unable to generate prompt for image"),
+                GenerationResult<T>.ImageGenerationFailedResult => await BadRequest(req, "Unable to generate image"),
+                GenerationResult<T>.SuccessResult r => await processor(r.Data),
+                _ => throw new InvalidOperationException($"Unknown generator result type: {result}")
             };
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "An unhandled exception occurred in GenerateImageLink");
+            _logger.LogError(ex, $"An unhandled exception occurred in {operation}");
             throw;
         }
     }
@@ -92,18 +93,16 @@ public class GenerateImageTrigger
         return await WriteResponse(req.CreateResponse(HttpStatusCode.BadRequest), text);
     }
 
-    private static async Task<HttpResponseData> SendImage(HttpRequestData req, ImageGenerationResult.SuccessResult r)
+    private static async Task<HttpResponseData> SendImage(HttpRequestData req, ImageGenerationData data)
     {
-        var sanitizedSentence = SanitizeFilename(r.Sentence);
+        var sanitizedSentence = SanitizeFilename(data.Sentence);
         var filename = $"{(sanitizedSentence.EndsWith('.') ? sanitizedSentence : (sanitizedSentence + "."))}jpg";
-        return await WriteResponse(SetHeader(req.CreateResponse(HttpStatusCode.OK), "Content-Disposition", $"attachment; filename=\"{filename}\""), r.Image);
+        return await WriteResponse(SetHeader(req.CreateResponse(HttpStatusCode.OK), "Content-Disposition", $"attachment; filename=\"{filename}\""), data.Image);
     }
 
-    private static async Task<HttpResponseData> SendImageLink(
-        HttpRequestData req,
-        LinkGenerationResult.SuccessResult r)
+    private static async Task<HttpResponseData> SendImageLink(HttpRequestData req, LinkGenerationData data)
     {
-        var response = new GenerateImageLinkResponse { Link = r.Link, Sentence = r.Sentence };
+        var response = new GenerateImageLinkResponse { Link = data.Link, Sentence = data.Sentence };
         var json = JsonSerializer.Serialize(response, options: SerializerOptions);
         return await WriteResponse(req.CreateResponse(HttpStatusCode.OK), json);
     }
@@ -142,5 +141,10 @@ public class GenerateImageTrigger
     private static string SanitizeFilename(string filename)
     {
         return Regex.Replace(Regex.Replace(filename, "[^\u0020-\u007E]", ""), "[\"/\\\\:]", "");
+    }
+
+    private static GeneratorOptions CreateGeneratorOptions(GenerateImageRequest request)
+    {
+        return new(request.TextGenerator, request.ImageGenerator, request.Corpus);
     }
 }
