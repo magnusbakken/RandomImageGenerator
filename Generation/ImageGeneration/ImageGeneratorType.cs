@@ -5,4 +5,5 @@ public enum ImageGeneratorType
     DeepAI,
     OpenAI,
     DeepAIStableDiffusion,
+    Pixray,
 }
