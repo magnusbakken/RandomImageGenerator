@@ -47,7 +47,7 @@ jobs:
           # For more information regarding Static Web App workflow configurations, please visit: https://aka.ms/swaworkflowconfig
           app_location: "frontend/"
           output_location: ".svelte-kit/output/client"
-          app_build_command: "node_modules/.pnpm/pnpm install && node_modules/.pnpm/pnpm run build"
+          app_build_command: "pnpm install && pnpm run build"
           skip_api_build: true
           ###### End of Repository/Build Configurations ######
 
