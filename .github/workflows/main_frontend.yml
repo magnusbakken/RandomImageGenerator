@@ -30,10 +30,11 @@ jobs:
         with:
           node-version: 16
 
+      - name: Enable corepack
+        run: corepack enable
+
       - name: Install pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: 8.7.5
+        run: corepack prepare pnpm@8.7.5
 
       - name: Build And Deploy
         id: builddeploy
