@@ -8,7 +8,8 @@ on:
     branches:
       - main
     paths:
-      - frontend/**
+      - api/**
+      - .github/workflows/main_randomimagegenerator.yml
   workflow_dispatch:
 
 env:

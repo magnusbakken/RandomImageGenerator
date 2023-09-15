@@ -5,13 +5,15 @@ on:
     branches:
       - main
     paths:
-      - api/**
+      - frontend/**
+      - .github/workflows/azure-static-web-apps-happy-rock-0ef655f03.yml
   pull_request:
     types: [opened, synchronize, reopened, closed]
     branches:
       - main
     paths:
-      - api/**
+      - frontend/**
+      - .github/workflows/azure-static-web-apps-happy-rock-0ef655f03.yml
 
 jobs:
   build_and_deploy_job:
