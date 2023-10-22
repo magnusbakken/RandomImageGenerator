@@ -31,6 +31,10 @@ jobs:
           npm run test --if-present
         working-directory: ./frontend
 
+      - name: Copy package.json
+        run: cp package.json build
+        working-directory: ./frontend
+
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v2
         with:
